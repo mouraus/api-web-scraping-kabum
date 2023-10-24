@@ -8,12 +8,15 @@ async function procurarProdutos(pagina, page, searchInput) {
   await page.goto(`https://www.kabum.com.br/busca/${searchInput}?page_number=${pagina}&page_size=100&facet_filters=&sort=most_searched`);
 
   const response = await page.evaluate(() => {
+    const nenhumProdutoEncontrado = window.document.querySelector('#listingEmpty') != null;
+    if (nenhumProdutoEncontrado) {
+      throw new Error('Nenhum produto encontrado');
+    }
     const produtos = [];
     let contador = 1;
 
     Array.from(window.document.querySelectorAll('.productCard')).forEach((c) => {
       temProximaPagina = document.querySelector('#listingPagination > ul > li.next.disabled') == undefined;
-
       const produtoElement = c.childNodes[1];
       const produto = {
         id: contador,
@@ -38,7 +41,7 @@ async function procurarProdutos(pagina, page, searchInput) {
   });
   return response;
 }
-async function getProdutos(page, searchInput) {
+async function getAllProdutos(page, searchInput) {
   try {
     let i = 1;
     const produtos = [];
@@ -58,13 +61,43 @@ async function getProdutos(page, searchInput) {
     throw err;
   }
 }
-async function iniciaBotKabum(searchInput) {
+
+async function getPageProdutos(page, searchInput, pagina) {
+  try {
+    const produtos = await procurarProdutos(pagina, page, searchInput);
+    produtos.pagina = pagina;
+    return produtos;
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
+}
+async function procuraAllProdutos(searchInput) {
   const browser = await puppeteer.launch({ headless: true });
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1920, height: 1080 });
-  const response = await getProdutos(page, searchInput);
-  await browser.close();
-  return response;
+  try {
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1920, height: 1080 });
+    const response = await getAllProdutos(page, searchInput);
+    await browser.close();
+    return response;
+  } catch (err) {
+    await browser.close();
+    throw err;
+  }
 }
 
-module.exports = { iniciaBotKabum };
+async function procuraPageProdutos(searchInput, pagina) {
+  const browser = await puppeteer.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1920, height: 1080 });
+    const response = await getPageProdutos(page, searchInput, pagina);
+    await browser.close();
+    return response;
+  } catch (err) {
+    await browser.close();
+    throw err;
+  }
+}
+
+module.exports = { procuraAllProdutos, procuraPageProdutos };

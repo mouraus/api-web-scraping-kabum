@@ -1,13 +1,14 @@
 const kabumBom = require('../bot/kabumBot');
 
-async function getProdutos(searchInput) {
-  try {
-    return await kabumBom.iniciaBotKabum(searchInput);
-  } catch (err) {
-    throw new Error(`Não foi possível realizar a busca de ${searchInput} no site da kabum`);
-  }
+function getAllProdutos(searchInput) {
+  return kabumBom.procuraAllProdutos(searchInput);
+}
+
+function getPageProdutos(searchInput, pagina) {
+  return kabumBom.procuraPageProdutos(searchInput, pagina);
 }
 
 module.exports = {
-  getProdutos,
+  getAllProdutos,
+  getPageProdutos,
 };
