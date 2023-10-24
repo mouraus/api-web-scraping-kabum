@@ -2,7 +2,6 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-constant-condition */
 const puppeteer = require('puppeteer');
-const fs = require('node:fs');
 
 async function procurarProdutos(pagina, page, searchInput) {
   let temProximaPagina = false;
@@ -42,15 +41,18 @@ async function procurarProdutos(pagina, page, searchInput) {
 async function getProdutos(page, searchInput) {
   try {
     let i = 1;
+    const produtos = [];
+
     let pr;
     while (true) {
       pr = await procurarProdutos(i, page, searchInput);
-      fs.writeFileSync(`produtos/produtos-kabum-${i}.json`, JSON.stringify({ produtos: pr.produtos }), (err) => console.log(err));
+      produtos.push({ items: pr.produtos, pagina: i });
       i += 1;
       if (!pr.temProximaPagina) {
         break;
       }
     }
+    return produtos;
   } catch (err) {
     console.log(err);
     throw err;
@@ -60,8 +62,9 @@ async function iniciaBotKabum(searchInput) {
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
   await page.setViewport({ width: 1920, height: 1080 });
-  await getProdutos(page, searchInput);
+  const response = await getProdutos(page, searchInput);
   await browser.close();
+  return response;
 }
 
 module.exports = { iniciaBotKabum };
