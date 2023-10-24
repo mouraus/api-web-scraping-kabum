@@ -56,7 +56,7 @@
 #### Retorno
 
 ```http
-  GET /api/produto/{searchInput}
+  GET /api/produto/{searchInput}/{pagina}
 ```
 {
   "produtos":  
